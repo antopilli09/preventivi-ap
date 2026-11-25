@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preventivi – AP Software House</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#14181f;--mute:#6b7280;--line:#e5e7eb;--acc:#1f3a8a;--acc2:#e8edfb}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;z-index:5}
+header b{font-size:17px;letter-spacing:.3px}
+nav button{background:none;border:1px solid #ffffff55;color:#fff;border-radius:8px;padding:6px 12px;margin-left:6px;cursor:pointer}
+nav button.on{background:#fff;color:var(--ink)}
+main{max-width:760px;margin:0 auto;padding:14px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 12px;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+input,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+input:focus,textarea:focus{outline:2px solid var(--acc);border-color:transparent}
+.svc{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.svc>.h{display:flex;align-items:center;gap:10px;padding:12px;background:#fafafa}
+.svc.on>.h{background:var(--acc2)}
+.svc .h span{flex:1}
+.svc .h small{color:var(--mute);display:block}
+.ex{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line)}
+.ex span{flex:1}
+.ex input[type=number]{width:62px;padding:5px 6px}
+.ex em{font-style:normal;color:var(--mute);min-width:84px;text-align:right}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc);flex:none}
+.free{display:grid;grid-template-columns:1fr 90px auto auto;gap:6px;margin-bottom:6px;align-items:center}
+.free label{display:flex;align-items:center;gap:4px;margin:0;white-space:nowrap}
+.free label input{width:auto}
+button.b{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;cursor:pointer}
+button.g{background:var(--acc2);color:var(--acc)}
+button.x{background:none;border:0;color:#b91c1c;font-size:20px;cursor:pointer}
+.tot{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.tot.big{font-size:19px;font-weight:700;border:0}
+.row-set{display:flex;gap:8px;align-items:center;padding:4px 0}
+.row-set span{flex:1}.row-set input{width:110px}
+#doc{display:none}
+@media print{
+ body{background:#fff}header,main{display:none}
+ #doc{display:block;font:13px/1.5 system-ui,Arial,sans-serif;color:#111;padding:0}
+ @page{margin:16mm}
+}
+#doc .top{display:flex;justify-content:space-between;border-bottom:3px solid #1f3a8a;padding-bottom:10px;margin-bottom:18px}
+#doc h1{margin:0;font-size:24px;color:#1f3a8a}
+#doc table{width:100%;border-collapse:collapse;margin:8px 0 14px}
+#doc th{text-align:left;font-size:11px;text-transform:uppercase;color:#555;border-bottom:1px solid #999;padding:5px 4px}
+#doc td{padding:6px 4px;border-bottom:1px solid #e5e5e5;vertical-align:top}
+#doc .r{text-align:right;white-space:nowrap}
+#doc .sum{margin-left:auto;width:55%}
+#doc .sum div{display:flex;justify-content:space-between;padding:4px 0}
+#doc .sum .f{font-weight:700;font-size:15px;border-top:2px solid #1f3a8a;margin-top:4px}
+#doc h3{font-size:13px;margin:18px 0 4px;color:#1f3a8a}
+#doc p{margin:0;white-space:pre-line}
+</style>
+</head>
+<body>
+<header><b>AP Software House</b><nav><button id="t1" class="on">Preventivo</button><button id="t2">Impostazioni</button></nav></header>
+
+<main id="quote">
+ <section><h2>Cliente</h2>
+  <div class="grid">
+   <div><label>Nome</label><input id="cNome"></div>
+   <div><label>Azienda</label><input id="cAz"></div>
+   <div><label>Email</label><input id="cMail" type="email"></div>
+   <div><label>Data</label><input id="cData" type="date"></div>
+   <div><label>Numero preventivo</label><input id="cNum" readonly></div>
+  </div></section>
+ <section><h2>Servizi</h2><div id="svcs"></div></section>
+ <section><h2>Voci libere</h2><div id="free"></div><button class="b g" id="addFree">+ Aggiungi voce</button></section>
+ <section><h2>Note</h2><textarea id="note" rows="3"></textarea></section>
+ <section><h2>Totale</h2>
+  <div class="tot"><span>Una tantum</span><b id="tOne"></b></div>
+  <div class="tot"><span>Canoni mensili</span><b id="tMon"></b></div>
+  <div class="tot big"><span>Totale primo mese</span><b id="tAll"></b></div>
+  <p style="color:var(--mute);font-size:12px">Prezzi dei servizi "a partire da": il prezzo base può variare in base alle richieste.</p>
+  <button class="b" id="pdf" style="width:100%">Scarica PDF</button>
+ </section>
+</main>
+
+<main id="settings" hidden>
+ <section><h2>Dati azienda</h2>
+  <label>Partita IVA</label><input id="sIva" placeholder="Da compilare">
+  <label style="margin-top:8px">Condizioni di pagamento</label><textarea id="sPay" rows="4"></textarea>
+ </section>
+ <section><h2>Prezzi (€)</h2><div id="prices"></div>
+  <button class="g b" id="reset" style="margin-top:10px">Ripristina prezzi predefiniti</button></section>
+ <section><h2>Esporta / Importa impostazioni</h2>
+  <textarea id="xfer" rows="4" placeholder="Premi Esporta per generare il testo, oppure incolla qui un'esportazione e premi Importa"></textarea>
+  <div style="display:flex;gap:8px;margin-top:8px"><button class="b" id="exp">Esporta</button><button class="b g" id="imp">Importa</button></div>
+ </section>
+</main>
+
+<div id="doc"></div>
+
+<script>
+const DEF={
+ iva:"",
+ pay:"Acconto del 50% all'accettazione del preventivo, saldo alla consegna. I canoni mensili si pagano anticipatamente. Pagamento tramite bonifico bancario.",
+ svc:[
+  {id:"cons",name:"Consulenza software",base:0,extras:[]},
+  {id:"web",name:"Sito web personalizzato",base:1000,extras:[
+   {n:"Pagine aggiuntive",p:50,q:1},{n:"E-commerce",p:600},{n:"Manutenzione mensile",p:30,m:1}]},
+  {id:"ai",name:"Automazione AI",base:800,extras:[
+   {n:"Integrazione WhatsApp",p:200},{n:"Integrazione email",p:150},{n:"Integrazione gestionale",p:300},
+   {n:"Chatbot sul sito",p:250},{n:"Canone mensile",p:50,m:1}]},
+  {id:"ges",name:"Gestionale personalizzato",base:1500,extras:[
+   {n:"Moduli aggiuntivi",p:200,q:1},{n:"Utenti aggiuntivi",p:20,q:1},{n:"Manutenzione mensile",p:40,m:1}]}
+ ]};
+const $=id=>document.getElementById(id);
+const eur=n=>n.toLocaleString("it-IT",{style:"currency",currency:"EUR"});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let S=JSON.parse(localStorage.apSettings||"null")||structuredClone(DEF);
+let sel={};   // sel[svcIdx]={on, ex:{i:{on,q}}}
+let freeRows=[];
+const save=()=>localStorage.apSettings=JSON.stringify(S);
+const nextNum=()=>`AP-${new Date().getFullYear()}-${String((+localStorage.apCounter||0)+1).padStart(3,"0")}`;
+
+function renderSvcs(){
+ $("svcs").innerHTML=S.svc.map((s,i)=>{
+  const st=sel[i]||(sel[i]={on:false,ex:{}});
+  return `<div class="svc ${st.on?"on":""}"><div class="h"><input type="checkbox" data-s="${i}" ${st.on?"checked":""}>
+   <span><b>${esc(s.name)}</b><small>${s.base?"da "+eur(s.base):"Gratuita"}</small></span></div>
+   ${st.on?s.extras.map((e,j)=>{const x=st.ex[j]||{};return `<div class="ex"><input type="checkbox" data-s="${i}" data-e="${j}" ${x.on?"checked":""}>
+    <span>${esc(e.n)}</span>${e.q&&x.on?`<input type="number" min="1" value="${x.q||1}" data-s="${i}" data-q="${j}">`:""}
+    <em>+${eur(e.p)}${e.m?"/mese":""}${e.q?" cad.":""}</em></div>`}).join(""):""}</div>`}).join("");
+}
+function renderFree(){
+ $("free").innerHTML=freeRows.map((r,i)=>`<div class="free"><input placeholder="Descrizione" value="${esc(r.d)}" data-f="${i}" data-k="d">
+  <input type="number" min="0" placeholder="€" value="${r.p}" data-f="${i}" data-k="p">
+  <label><input type="checkbox" ${r.m?"checked":""} data-f="${i}" data-k="m">mensile</label><button class="x" data-del="${i}">×</button></div>`).join("");
+}
+// Returns line items [{d,amt,m}] for selected services, extras, free rows
+function lines(){
+ const L=[];
+ S.svc.forEach((s,i)=>{const st=sel[i];if(!st||!st.on)return;
+  L.push({d:s.name+(s.base?"":" (gratuita)"),amt:s.base,m:0,head:1});
+  s.extras.forEach((e,j)=>{const x=st.ex[j];if(!x||!x.on)return;const q=e.q?(+x.q||1):1;
+   L.push({d:"• "+e.n+(q>1?` × ${q}`:""),amt:e.p*q,m:e.m})})});
+ freeRows.forEach(r=>{if(r.d||+r.p)L.push({d:r.d||"Voce",amt:+r.p||0,m:r.m})});
+ return L;
+}
+const totals=L=>{const o=L.filter(l=>!l.m).reduce((a,l)=>a+l.amt,0),m=L.filter(l=>l.m).reduce((a,l)=>a+l.amt,0);return{o,m}};
+function recalc(){const t=totals(lines());$("tOne").textContent=eur(t.o);$("tMon").textContent=eur(t.m);$("tAll").textContent=eur(t.o+t.m)}
+
+$("svcs").onchange=e=>{const t=e.target,i=t.dataset.s;if(i==null)return;const st=sel[i];
+ if(t.dataset.q!=null){(st.ex[t.dataset.q]||={}).q=Math.max(1,+t.value||1);recalc();return}
+ if(t.dataset.e!=null)(st.ex[t.dataset.e]||={}).on=t.checked;else st.on=t.checked;
+ renderSvcs();recalc()};
+$("svcs").oninput=e=>{if(e.target.dataset.q!=null){(sel[e.target.dataset.s].ex[e.target.dataset.q]||={}).q=Math.max(1,+e.target.value||1);recalc()}};
+$("free").oninput=$("free").onchange=e=>{const t=e.target;if(t.dataset.f==null)return;freeRows[t.dataset.f][t.dataset.k]=t.type=="checkbox"?t.checked:t.value;recalc()};
+$("free").onclick=e=>{if(e.target.dataset.del!=null){freeRows.splice(e.target.dataset.del,1);renderFree();recalc()}};
+$("addFree").onclick=()=>{freeRows.push({d:"",p:"",m:false});renderFree()};
+
+function renderSettings(){
+ $("sIva").value=S.iva;$("sPay").value=S.pay;
+ $("prices").innerHTML=S.svc.map((s,i)=>`<div class="row-set"><span><b>${esc(s.name)}</b> (base)</span><input type="number" min="0" value="${s.base}" data-i="${i}"></div>`+
+  s.extras.map((e,j)=>`<div class="row-set"><span>&nbsp;&nbsp;${esc(e.n)}${e.m?" /mese":""}</span><input type="number" min="0" value="${e.p}" data-i="${i}" data-j="${j}"></div>`).join("")).join("");
+}
+$("prices").oninput=e=>{const t=e.target,v=Math.max(0,+t.value||0);
+ if(t.dataset.j!=null)S.svc[t.dataset.i].extras[t.dataset.j].p=v;else S.svc[t.dataset.i].base=v;save()};
+$("sIva").oninput=()=>{S.iva=$("sIva").value;save()};
+$("sPay").oninput=()=>{S.pay=$("sPay").value;save()};
+$("reset").onclick=()=>{if(confirm("Ripristinare i prezzi predefiniti?")){const{iva,pay}=S;S=structuredClone(DEF);S.iva=iva;S.pay=pay;save();renderSettings()}};
+
+$("exp").onclick=async()=>{$("xfer").value=JSON.stringify(S);$("xfer").select();
+ try{await navigator.clipboard.writeText($("xfer").value);alert("Copiato negli appunti. Incollalo sull'altro dispositivo e premi Importa.")}catch{alert("Copia il testo manualmente.")}};
+$("imp").onclick=()=>{try{
+ const o=JSON.parse($("xfer").value);
+ if(!Array.isArray(o.svc)||o.svc.length!=DEF.svc.length||!o.svc.every(s=>typeof s.base=="number"&&Array.isArray(s.extras)&&s.extras.every(e=>typeof e.p=="number")))throw 0;
+ if(!confirm("Sovrascrivere le impostazioni attuali?"))return;
+ S={iva:String(o.iva||""),pay:String(o.pay||""),svc:o.svc};save();renderSettings();alert("Impostazioni importate.")
+}catch{alert("Testo non valido.")}};
+
+function tab(n){$("quote").hidden=n!=1;$("settings").hidden=n!=2;$("t1").className=n==1?"on":"";$("t2").className=n==2?"on":"";
+ if(n==1){renderSvcs();recalc()}else renderSettings()}
+$("t1").onclick=()=>tab(1);$("t2").onclick=()=>tab(2);
+
+$("pdf").onclick=()=>{
+ const L=lines();if(!L.length)return alert("Seleziona almeno un servizio o aggiungi una voce.");
+ const t=totals(L),num=$("cNum").value,d=$("cData").value;
+ const dt=d?new Date(d).toLocaleDateString("it-IT"):"";
+ const fmt=l=>l.head&&!l.amt?"Gratuita":eur(l.amt)+(l.m?" /mese":"");
+ $("doc").innerHTML=`<div class="top"><div><h1>AP Software House</h1>${S.iva?`<div>P.IVA ${esc(S.iva)}</div>`:""}</div>
+  <div style="text-align:right"><b>PREVENTIVO ${esc(num)}</b><br>Data: ${dt}<br>Valido 30 giorni</div></div>
+  <h3>Cliente</h3><p>${[$("cNome").value,$("cAz").value,$("cMail").value].filter(Boolean).map(esc).join("\n")||"—"}</p>
+  <table><tr><th>Descrizione</th><th class="r">Importo</th></tr>${L.map(l=>`<tr><td${l.head?' style="font-weight:600"':""}>${esc(l.d)}</td><td class="r">${fmt(l)}</td></tr>`).join("")}</table>
+  <div class="sum"><div><span>Totale una tantum</span><span>${eur(t.o)}</span></div><div><span>Canoni mensili</span><span>${eur(t.m)}</span></div>
+  <div class="f"><span>Totale primo mese</span><span>${eur(t.o+t.m)}</span></div></div>
+  <p style="font-size:11px;color:#666;margin-top:4px">${S.iva?"":"Importi non comprensivi di IVA, ove dovuta."}</p>
+  ${$("note").value?`<h3>Note</h3><p>${esc($("note").value)}</p>`:""}
+  <h3>Validità</h3><p>Il presente preventivo è valido 30 giorni dalla data di emissione.</p>
+  <h3>Condizioni di pagamento</h3><p>${esc(S.pay)}</p>`;
+ const old=document.title;document.title=`Preventivo ${num}${$("cAz").value?" - "+$("cAz").value:""}`;
+ localStorage.apCounter=(+localStorage.apCounter||0)+1;
+ window.onafterprint=()=>{document.title=old;$("cNum").value=nextNum();window.onafterprint=null};
+ window.print();
+};
+
+$("cData").value=new Date().toISOString().slice(0,10);$("cNum").value=nextNum();
+tab(1);
+</script>
+</body>
+</html>
